@@ -1,9 +1,11 @@
-from typing import Dict, List
+from typing import List
+
+from openai.types.chat import ChatCompletionMessageParam
 
 from providers import ALL_PROVIDERS
 
 
-def get_prompt(line: str) -> List[Dict[str, str]]:
+def get_prompt(line: str) -> List[ChatCompletionMessageParam]:
     providers_string = ", ".join(ALL_PROVIDERS)
     system = (
         "You are a highly specialized AI assistant tasked with analyzing a single variable from a .env file. "
