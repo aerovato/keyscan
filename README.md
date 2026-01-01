@@ -4,10 +4,10 @@ Keyscan: LLM-powered API key scanner.
 
 Keyscan searches public GitHub Gists for exposed API keys and helps surface
 potential exposures for further review. It uses GitHub's web search pages to
-locate candidate gists, fetches gist contents via the GitHub API, and asks a
-local LLM (Ollama) to classify whether a value looks like an API key. When a
-likely exposure is found, the project saves a structured record and prepares a
-user-facing message to notify the gist owner.
+locate candidate gists, fetches gist contents via the GitHub API, and calls an
+OpenAI-compatible chat completions endpoint to classify whether a value looks
+like an API key. When a likely exposure is found, the project saves a
+structured record and prepares a user-facing message to notify the gist owner.
 
 This repository is intended as a research / defensive tool to help users find
 and remediate accidentally exposed credentials. Do not use Keyscan to access,
@@ -48,27 +48,29 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. (Optional): Configure environment variables. Copy `.env.example` to `.env`
-   and update values as needed.
+4. Configure environment variables. Copy `.env.example` to `.env` and update
+   values as needed.
 
 ```env
 GITHUB_TOKEN="ghp_..." # GitHub Token for increased API rate limits
-GITHUB_SESSION_COOKIE="..." # Optional: GitHub session cookie for HTML requests (unknown if this actually increases rate limits)
+GITHUB_SESSION_COOKIE="..." # Optional: GitHub session cookie for HTML requests
+LLM_BASE_URL="http://localhost:1234/v1" # Required: Base URL for OpenAI compatible endpoint
+LLM_API_KEY="API_KEY_HERE" # Change to API key if authentication needed
 ```
 
-5. Ensure that Ollama is installed.
+5. Ensure that your OpenAI-compatible endpoint is reachable from this machine
+   and that you have configured `.env` with `LLM_BASE_URL` (and optionally
+   `LLM_API_KEY`).
 
 ## Usage
 
 Prepare a newline separated keywords file with terms to search for. An example
 file is provided in `keywords.txt`.
 
-Download a suitable Ollama model. We recommend using smaller models or models
-with controllable thinking behaviour. Larger thinking models are more prone to
-overthinking and looping behavior.
-
-Recommended model: `qwen3:1.7b` (`qwen3:4b` and larger is prone to
-overthinking.)
+Configure an OpenAI-compatible endpoint. Provide the base URL and API key (if
+required) in `.env`. This project works with any API that implements the
+OpenAI chat completions protocol (e.g., LM Studio, Llama.cpp, vLLM, self-hosted
+gateways, etc.).
 
 Run the scanner from the repository root:
 
@@ -116,8 +118,9 @@ subfolders:
 3. Preprocessing: File contents are preprocessed to extract candidate text
    strings. In the case of `Dotenv` files, the file is split into lines with
    empty lines and comments removed.
-4. Classification: Each candidate line is sent to a local LLM model for
-   classification. The model outputs two values: `confidence` and `provider`.
+4. Classification: Each candidate line is sent to your configured
+   OpenAI-compatible endpoint for classification. The model outputs two values:
+   `confidence` and `provider`.
 5. Verification: When a potential key is found, Keyscan attempts to verify the
    key by calling a provider-specific endpoint.
 6. Recording: Records deemed interesting are saved for manual verification and

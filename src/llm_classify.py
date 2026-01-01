@@ -1,7 +1,8 @@
 import json
+import os
 from typing import Any, Dict, List, Literal, Optional, Set, get_args
 
-import ollama
+from openai import OpenAI
 
 from providers import PROVIDERS_TYPE, parse_provider
 from prompt import get_prompt
@@ -10,6 +11,15 @@ from src.util import print_err
 
 CONFIDENCE_LEVELS_TYPE = Literal["NONE", "LOW", "MEDIUM", "HIGH"]
 CONFIDENCE_LEVELS: Set[CONFIDENCE_LEVELS_TYPE] = set(get_args(CONFIDENCE_LEVELS_TYPE))
+
+
+LLM_API_KEY = os.getenv("LLM_API_KEY", "")
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "")
+
+if not LLM_BASE_URL:
+    raise RuntimeError("LLM_BASE_URL environment variable must be set")
+
+client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
 
 
 def parse_confidence(confidence: str | None) -> CONFIDENCE_LEVELS_TYPE | None:
@@ -61,16 +71,14 @@ def classify_single_line(
 ) -> ClassificationResponse:
     messages = get_prompt(line)
 
-    response = ollama.chat(
+    response = client.chat.completions.create(
         model=model,
         messages=messages,
-        options={
-            "temperature": 0,
-            "num_predict": 4000,
-        },
+        temperature=0,
+        max_tokens=2000,
     )
 
-    response_content = response.message.content
+    response_content = response.choices[0].message.content
 
     return ClassificationResponse(line, response_content)
 
