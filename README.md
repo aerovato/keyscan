@@ -24,11 +24,11 @@ This repository is intended as a research / defensive tool to help users find an
 1. Clone the repository:
 
 ```sh
-git clone https://github.com/kevinMEH/keyscan.git
+git clone https://github.com/aerovato/keyscan.git
 cd keyscan
 
 # OR, if project directory already created:
-git clone https://github.com/kevinMEH/keyscan.git .
+git clone https://github.com/aerovato/keyscan.git .
 ```
 
 2. (Recommended): Create and activate a virtual environment:

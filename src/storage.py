@@ -74,7 +74,7 @@ def generate_message(provider: PROVIDERS_TYPE, gist_id: str, owner: str) -> str:
         f"we have detected a potentially active {provider} API key "
         f"exposed in your GitHub Gist: https://gist.github.com/{owner}/{gist_id}.\n"
         "Please revoke the key immediately and delete the gist.\n"
-        "This action was performed by kevinMEH/keyscan. "
+        "This action was performed by aerovato/keyscan. "
         "For more information, please contact @kevinMEH. "
         "If you find our service helpful, please consider following and shouting out @kevinMEH."
     )
