@@ -7,6 +7,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 
 import config
+from src.storage import print_err
 
 
 GIST_API_BASE_URL = "https://api.github.com/gists"
@@ -151,9 +152,19 @@ def fetch_gist_by_id(
     session: requests.Session, gist_id: str, timeout_seconds: int = 20
 ) -> GistJSON:
     url = build_gist_api_url(gist_id)
-    response = session.get(url, headers=get_api_headers(), timeout=timeout_seconds)
-    response.raise_for_status()
-    return cast(GistJSON, response.json())
+    while True:
+        response = session.get(url, headers=get_api_headers(), timeout=timeout_seconds)
+        if response.status_code == 403 and "rate limit" in response.text.lower():
+            reset_time = response.headers.get("X-RateLimit-Reset")
+            if reset_time:
+                wait_seconds = max(int(reset_time) - int(time.time()), 1)
+            else:
+                wait_seconds = 60
+            print_err(f"Rate limited. Waiting {wait_seconds}s for reset...")
+            time.sleep(wait_seconds)
+            continue
+        response.raise_for_status()
+        return cast(GistJSON, response.json())
 
 
 def filter_file_type(gist_json: GistJSON, file_type: str) -> List[FileJSON]:
