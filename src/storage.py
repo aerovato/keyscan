@@ -25,7 +25,9 @@ def print_err(s):
 
 
 def save_processing_state(output_path: str, keyword: str, page_number: int) -> None:
-    state_path = os.path.join(output_path, "state", f"{round(time.time())}.json")
+    state_dir = os.path.join(output_path, "state")
+    os.makedirs(state_dir, exist_ok=True)
+    state_path = os.path.join(state_dir, f"{round(time.time())}.json")
     state = {
         "keyword": keyword,
         "last_page": page_number,
