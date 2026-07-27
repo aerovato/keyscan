@@ -12,6 +12,8 @@ from src.storage import print_err
 
 GIST_API_BASE_URL = "https://api.github.com/gists"
 GIST_SEARCH_BASE_URL = "https://gist.github.com/search"
+RATE_LIMIT_RETRIES = 3
+RATE_LIMIT_WAIT_SECONDS = 60
 
 
 def _default_headers() -> Dict[str, str]:
@@ -152,19 +154,28 @@ def fetch_gist_by_id(
     session: requests.Session, gist_id: str, timeout_seconds: int = 20
 ) -> GistJSON:
     url = build_gist_api_url(gist_id)
-    while True:
+    for attempt in range(RATE_LIMIT_RETRIES + 1):
         response = session.get(url, headers=get_api_headers(), timeout=timeout_seconds)
-        if response.status_code == 403 and "rate limit" in response.text.lower():
-            reset_time = response.headers.get("X-RateLimit-Reset")
-            if reset_time:
-                wait_seconds = max(int(reset_time) - int(time.time()), 1)
-            else:
-                wait_seconds = 60
-            print_err(f"Rate limited. Waiting {wait_seconds}s for reset...")
-            time.sleep(wait_seconds)
-            continue
-        response.raise_for_status()
-        return cast(GistJSON, response.json())
+        rate_limited = response.status_code == 429 or (
+            response.status_code == 403 and "rate limit" in response.text.lower()
+        )
+        if not rate_limited or attempt == RATE_LIMIT_RETRIES:
+            response.raise_for_status()
+            return cast(GistJSON, response.json())
+
+        retry_after = response.headers.get("Retry-After")
+        reset_time = response.headers.get("X-RateLimit-Reset")
+        if retry_after:
+            wait_seconds = max(int(retry_after), 1)
+        elif response.headers.get("X-RateLimit-Remaining") == "0" and reset_time:
+            wait_seconds = max(int(reset_time) - int(time.time()), 1)
+        else:
+            wait_seconds = RATE_LIMIT_WAIT_SECONDS * 2**attempt
+
+        print_err(f"Rate limited. Retrying in {wait_seconds}s...")
+        time.sleep(wait_seconds)
+
+    raise AssertionError("unreachable")
 
 
 def filter_file_type(gist_json: GistJSON, file_type: str) -> List[FileJSON]:
