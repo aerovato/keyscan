@@ -117,6 +117,23 @@ Keyscan may discover credentials that grant access to private services and accou
 - Users will holds themselves solely responsible for all outcomes arising from the usage of the software.
 - Users will follow GitHub's terms of service and all applicable local regulations.
 
+## Built with Operator
+
+This repository is maintained with [Operator Memory](https://github.com/aerovato/operator-memory) — durable, agent-maintained documentation that lets AI agents work on the project with full context across sessions. The published brain lives in [`.operator-shared/`](.operator-shared/).
+
+To work on Keyscan with the same context, install Operator Memory:
+
+```bash
+# With NPM
+npm install --global @aerovato/operator-helper
+
+# With Bun
+bun add --global --minimum-release-age 0 @aerovato/operator-helper@latest
+
+# Install OpenCode plugin
+operator-helper install opencode
+```
+
 ## License
 
 Keyscan is provided under GPLv3. By downloading or using this software,
