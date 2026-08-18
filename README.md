@@ -2,6 +2,8 @@
   <img src="https://raw.githubusercontent.com/aerovato/keyscan/main/.github/README/banner.jpg" alt="Keyscan Banner" />
 </p>
 
+> ##### Built with [Operator Memory](https://github.com/aerovato/operator-memory)
+
 # Keyscan
 
 Keyscan: LLM-powered API key scanner.
