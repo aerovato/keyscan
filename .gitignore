@@ -1,6 +1,7 @@
 internal
 output
 config.py
+.operator
 
 __pycache__
 .venv
